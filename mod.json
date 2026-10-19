@@ -1,5 +1,5 @@
 {
-	"geode": "5.0.0-beta.1",
+	"geode": "5.11.2",
 	"gd": {
 		"win": "2.2081",
 		"android": "2.2081",
@@ -8,7 +8,7 @@
 	},
 	"id": "cattodev.gambling",
 	"name": "Gambling",
-	"version": "v2.0.0",
+	"version": "v2.1.0",
 	"developer": "CattoDev",
 	"description": "Recreation of the CS case opening menu.",
 	"resources": {

@@ -7,17 +7,19 @@
 
 class RollingLayer : public cocos2d::CCLayerColor {
 public:
-    cocos2d::CCLayer* m_contentLayer;
+    cocos2d::CCLayer* m_contentLayer = nullptr;
     RewardUnlockLayer* m_unlockLayer = nullptr;
-    cocos2d::CCMenu* m_itemsMenu;
-    cocos2d::CCDrawNode* m_lineNode;
-    cocos2d::CCNode* m_backgroundGlow;
-    float m_timeElapsed;
-    float m_startX;
-    float m_moveAmountX;
-    cocos2d::CCPoint m_linePos;
+    cocos2d::CCMenu* m_itemsMenu = nullptr;
+    cocos2d::CCDrawNode* m_lineNode = nullptr;
+    cocos2d::CCNode* m_backgroundGlow = nullptr;
+    float m_timeElapsed = 0.f;
+    float m_startX = 0.f;
+    float m_moveAmountX = 0.f;
+    cocos2d::CCPoint m_linePos = cocos2d::CCPointZero;
     RewardBox* m_hoveringBox = nullptr;
     bool m_isGold = false;
+    bool m_finished = false;
+    bool m_closed = false;
     int m_smoothFix = 2;
     geode::ListenerHandle m_inputEvent;
 
@@ -46,6 +48,7 @@ public:
     void closeAndAward();
 
     void update(float dt) override;
+    void onExit() override;
 
     static RollingLayer* create(RewardUnlockLayer* unlockLayer);
 };

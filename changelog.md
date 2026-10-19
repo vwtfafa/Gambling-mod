@@ -1,3 +1,9 @@
+# 2.1.0
+- updated to Geode 5.11.2
+- fixed a crash when pressing ESC during the chest opening animation
+- added iOS builds
+- hardened reward and animation handling
+
 # 2.0.0
 - updated to Geode v5
 - adjusted rolling animation

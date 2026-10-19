@@ -97,18 +97,23 @@ bool RollingLayer::init(RewardUnlockLayer* unlockLayer) {
     // prepare
     m_contentLayer->setScaleY(0.f);
 
-    m_inputEvent = KeyboardInputEvent(KEY_Escape).listen([this](KeyboardInputData& event) {
-        // quick open
-        this->animationFinished();
-
-        return ListenerResult::Propagate;
-    });
-    
     return true;
 }
 
 void RollingLayer::begin() {
     this->setKeyboardEnabled(true);
+
+    // only listen while the roll is actually running - before that the game
+    // should still receive escape (the chest is not open yet)
+    m_inputEvent = KeyboardInputEvent(KEY_Escape).listen([this](KeyboardInputData& data) {
+        if(data.action == KeyboardInputData::Action::Press) {
+            // quick open
+            this->animationFinished();
+        }
+
+        // eat escape so the game doesn't close the reward layer underneath us
+        return ListenerResult::Stop;
+    });
 
     this->setupTargetBox();
     this->startAnimation();
@@ -150,16 +155,29 @@ void RollingLayer::setupTargetBox() {
     // otherwise do boring item
     auto item = m_unlockLayer->m_rewardItem;
 
+    if(!item) return;
+
     this->setupRewardBoxWithItem(this->getTargetBox(), item);
 }
 
 // CurrencySprite::rewardToSpriteType recreation
 CurrencySpriteType RollingLayer::rewardToSpriteType(SpecialRewardItem item) {
     int idx = static_cast<int>(item) - 1;
+    constexpr int spriteTypeCount = sizeof(g_currencySpriteTypes) / sizeof(g_currencySpriteTypes[0]);
+
+    if(idx < 0 || idx >= spriteTypeCount) {
+        return CurrencySpriteType::Orb;
+    }
+
     return static_cast<CurrencySpriteType>(g_currencySpriteTypes[idx]);
 }
 
 cocos2d::ccColor3B RollingLayer::rarityColorForRewardItem(GJRewardItem* item) {
+    // default color (gray)
+    ccColor3B color = ccColor3B { 100, 100, 150 };
+
+    if(!item || !item->m_rewardObjects) return color;
+
     // get highest rarity reward
     int highestRarity = 0;
     for(auto& obj : CCArrayExt<GJRewardObject*>(item->m_rewardObjects)) {
@@ -191,9 +209,6 @@ cocos2d::ccColor3B RollingLayer::rarityColorForRewardItem(GJRewardItem* item) {
 
         if(highestRarity < rarity) highestRarity = rarity;
     }
-
-    // default color (gray)
-    ccColor3B color = ccColor3B { 100, 100, 150 };
 
     switch(highestRarity) {
         // blue
@@ -248,10 +263,15 @@ void RollingLayer::createRewardBoxes() {
 
 void RollingLayer::scatterRewards() {
     auto gsm = GameStatsManager::sharedState();
+    if(!gsm) return;
 
     auto rewards = gsm->m_allTreasureRoomChests;
+    if(!rewards) return;
 
     auto rewardMeta = this->rewardMetaForRewardType(static_cast<GJRewardType>(m_unlockLayer->m_chestType));
+
+    // unknown reward type - keep the boxes empty instead of crashing
+    if(rewardMeta.min == 0 && rewardMeta.max == 0) return;
 
     log::debug("m_chestType: {}, ({}, {})", m_unlockLayer->m_chestType, rewardMeta.min, rewardMeta.max);
 
@@ -268,13 +288,18 @@ void RollingLayer::scatterRewards() {
         int randNum = rDist(eng);
 
         auto rewardItem = typeinfo_cast<GJRewardItem*>(rewards->objectForKey(randNum));
+        if(!rewardItem) continue;
 
-        auto rewardBox = typeinfo_cast<RewardBox*>(m_itemsMenu->getChildren()->objectAtIndex(i));    
+        auto rewardBox = typeinfo_cast<RewardBox*>(m_itemsMenu->getChildren()->objectAtIndex(i));
+        if(!rewardBox) continue;
+
         this->setupRewardBoxWithItem(rewardBox, rewardItem);
     }
 }
 
 void RollingLayer::setupRewardBoxWithItem(RewardBox* box, GJRewardItem* item) {
+    if(!box || !item || !item->m_rewardObjects) return;
+
     auto menu = this->createMenuFromRewardObjects(item->m_rewardObjects);
 
     // get box height
@@ -383,6 +408,9 @@ void RollingLayer::update(float dt) {
 }*/
 
 void RollingLayer::animationFinished() {
+    if(m_finished) return;
+    m_finished = true;
+
     this->unscheduleUpdate();
 
     if(m_isGold) {
@@ -488,6 +516,8 @@ float RollingLayer::rewardBoxHeight() {
 CCMenu* RollingLayer::createMenuFromRewardObjects(CCArray* rewardObjects) {
     auto menu = CCMenu::create();
 
+    if(!rewardObjects) return menu;
+
     for(auto& obj : CCArrayExt<GJRewardObject*>(rewardObjects)) {
         // icons
         if(obj->m_specialRewardItem == SpecialRewardItem::CustomItem) {
@@ -526,9 +556,23 @@ CCMenu* RollingLayer::createMenuFromRewardObjects(CCArray* rewardObjects) {
 }
 
 void RollingLayer::closeAndAward() {
-    m_unlockLayer->playRewardEffect();
+    if(m_closed) return;
+    m_closed = true;
+
+    m_inputEvent.destroy();
+
+    if(m_unlockLayer) {
+        m_unlockLayer->playRewardEffect();
+    }
 
     this->removeFromParent();
+}
+
+void RollingLayer::onExit() {
+    m_inputEvent.destroy();
+    this->unscheduleUpdate();
+
+    CCLayerColor::onExit();
 }
 
 RollingLayer* RollingLayer::create(RewardUnlockLayer* unlockLayer) {

@@ -24,7 +24,7 @@ using namespace geode::prelude;
 
 class $modify(MyUnlockLayer, RewardUnlockLayer) {
 	struct Fields {
-		RollingLayer* m_rollingLayer = nullptr;
+		geode::Ref<RollingLayer> m_rollingLayer = nullptr;
 	};
 
 	bool init(int p0, RewardsPage* p1) {
@@ -33,16 +33,23 @@ class $modify(MyUnlockLayer, RewardUnlockLayer) {
 		// verify if its secret chests
 		if(m_chestType <= 2) return true;
 
+		// unknown / newer chest types: keep the vanilla animation
+		if(m_chestType > static_cast<int>(GJRewardType::Gold)) return true;
+
 		m_fields->m_rollingLayer = RollingLayer::create(this);
-		this->addChild(m_fields->m_rollingLayer, 100);
+		if(m_fields->m_rollingLayer) {
+			this->addChild(m_fields->m_rollingLayer, 100);
+		}
 
 		return true;
 	}
 
 	void startRolling() {
-		m_chestSprite->switchToState(ChestSpriteState::Opened, false);
+		if(m_chestSprite) {
+			m_chestSprite->switchToState(ChestSpriteState::Opened, false);
+		}
 
-		if(m_fields->m_rollingLayer) {
+		if(m_fields->m_rollingLayer && m_fields->m_rollingLayer->getParent()) {
 			m_fields->m_rollingLayer->begin();
 		}
 	}
