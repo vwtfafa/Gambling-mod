@@ -40,10 +40,6 @@ jobs:
         uses: geode-sdk/build-geode-mod@main
         with:
           sdk: given
-          # Temporary: upstream 2.2081 bindings are missing depends annotations
-          # and iOS FMOD includes. Remove once these fixes are merged upstream.
-          bindings: vwtfafa/bindings
-          bindings-ref: 5a23683eb6463394f8d48fe919bc4c03c2fd49f4
           combine: true
           target: ${{ matrix.config.target }}
 
