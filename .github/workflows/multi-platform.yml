@@ -39,6 +39,7 @@ jobs:
       - name: Build the mod
         uses: geode-sdk/build-geode-mod@main
         with:
+          sdk: given
           # Temporary: upstream 2.2081 bindings are missing depends annotations
           # and iOS FMOD includes. Remove once these fixes are merged upstream.
           bindings: vwtfafa/bindings

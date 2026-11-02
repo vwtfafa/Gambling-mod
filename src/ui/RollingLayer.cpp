@@ -530,8 +530,8 @@ CCMenu* RollingLayer::createMenuFromRewardObjects(CCArray* rewardObjects) {
             auto subMenu = CCMenu::create();
 
             // label
-            auto label = CCLabelBMFont::create(fmt::format("+{}", obj->m_total).c_str(), "bigFont.fnt");
-            label->limitLabelWidth(50.f, 1.f, 0.1f);
+            auto label = Label::create(fmt::format("+{}", obj->m_total), "bigFont.fnt");
+            label->setLimitLabelWidth(50.f, 1.f, 0.1f);
 
             subMenu->addChild(label);
 
