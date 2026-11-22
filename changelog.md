@@ -1,5 +1,5 @@
 # 2.1.0
-- migrated to Geode 6.0.0-alpha.1
+- migrated to Geode 6.0.0-beta.1
 
 - updated to Geode 5.11.2
 - fixed a crash when pressing ESC during the chest opening animation
