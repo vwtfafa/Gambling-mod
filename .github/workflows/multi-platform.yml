@@ -41,6 +41,8 @@ jobs:
         with:
           sdk: given
           combine: true
+          bindings: vwtfafa/bindings
+          bindings-ref: fix/mac-rewardunlocklayer-typeinfo
           target: ${{ matrix.config.target }}
 
   package:
